@@ -1,0 +1,35 @@
+networks:
+    mynetwork:
+        ipam:
+            config:
+                - subnet: ${DOCKER_SUBNET}
+
+services:
+    php:
+        build:
+            context: ./.docker/php/
+            dockerfile: Dockerfile-dev
+            args:
+                UID: ${UID:-1000}
+                GID: ${GID:-1000}
+                PHP_IMAGE: ${PHP_IMAGE}
+                DOCKER_USER: ${DOCKER_USER:-app_user}
+                DOCKER_PROJECT_PATH: ${DOCKER_PROJECT_PATH}
+        container_name: '${CONTAINER_PHP}'
+        platform: linux/amd64
+        working_dir: ${DOCKER_PROJECT_PATH}
+        user: ${DOCKER_USER:-app_user}
+        tty: true
+        stdin_open: true
+        networks:
+            mynetwork:
+                ipv4_address: ${DOCKER_PHP_IP}
+        ports:
+            - '${PHP_PORT:-9000}:9000'
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        volumes:
+            - ${PWD:-./}/.docker/php/custom.ini:/usr/local/etc/php/php.ini:ro
+            - ${PWD:-./}/application:${DOCKER_PROJECT_PATH}:cached
+            - ${PWD:-./}/application/var:${DOCKER_PROJECT_PATH}/var:delegated
+        restart: unless-stopped

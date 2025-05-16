@@ -1,0 +1,48 @@
+ARG PHP_IMAGE
+
+FROM ${PHP_IMAGE:?"YOU_MUST_DEFINE_PHP_IMAGE_AS_ENV_VAR"}
+
+ARG UID
+ARG GID
+ARG DOCKER_USER
+ARG DOCKER_PROJECT_PATH
+
+RUN docker-php-source extract \
+   # do important things \
+   && docker-php-source delete \
+   && apk --no-cache update && apk --no-cache upgrade
+
+RUN apk --no-cache update && apk --no-cache upgrade && apk --no-cache add \
+    acl \
+    bash \
+    nano \
+    shadow \
+    sudo \
+    zip
+
+# install gnu-libiconv and set LD_PRELOAD env to make iconv work fully on Alpine image.
+# see https://github.com/docker-library/php/issues/240#issuecomment-763112749
+ENV LD_PRELOAD=/usr/lib/preloadable_libiconv.so
+
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions \
+    @composer \
+    apcu \
+    bcmath \
+    bz2 \
+    intl \
+    memcached \
+    opcache \
+    xsl \
+    yaml \
+    zip
+
+RUN groupmod -g $GID $DOCKER_USER && usermod -u $UID $DOCKER_USER
+
+RUN mkdir -p /usr/local/var/run && \
+    mkdir -p $DOCKER_PROJECT_PATH/var && \
+    chown -R $DOCKER_USER: /usr/local/var/run $DOCKER_PROJECT_PATH
+
+WORKDIR $DOCKER_PROJECT_PATH
+
+USER $DOCKER_USER

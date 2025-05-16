@@ -41,7 +41,7 @@ DOCKER_USER=www-data
 DOCKER_PROJECT_PATH=
 ```
 
-The, you have to build the container.
+Then, you have to build the container.
 
 ```bash
 make up

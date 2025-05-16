@@ -1,4 +1,4 @@
-# docker-php
+# learning-docker-php-example
 
 This is an example about how to create a docker container to use PHP.
 
